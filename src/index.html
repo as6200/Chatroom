@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chatroom</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="index.js"></script>
+  
+</head>
+<body>
+  <div class="login-screen" id="loginScreen">
+    <div class="login-box">
+      <h2 id="loginTitle">Login</h2>
+      <input type="text" id="loginUsername" placeholder="Username">
+      <input type="password" id="loginPassword" placeholder="Password">
+      <button id="loginBtn">Login</button>
+      <span class="toggle-link" id="toggleAuth">Don't have an account? Sign up</span>
+    </div>
+  </div>
+
+  <div class="sidebar hidden" id="sidebar">
+    <div class="sidebar-header">
+      <span>Channels</span>
+      <button id="addChannel">+</button>
+    </div>
+    <div class="channels">
+      <ul id="channelList"></ul>
+    </div>
+  </div>
+  <div class="chat hidden" id="chat">
+    <div class="chat-header" id="chatHeader">#general</div>
+    <div class="messages" id="messages"></div>
+    <div class="composer">
+      <textarea id="input" rows="2" placeholder="Type a message..."></textarea>
+      <button id="send">Send</button>
+    </div>
+  </div>
+
+</body>
+</html>
