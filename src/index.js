@@ -1,6 +1,6 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.0/firebase-app.js";
-import { getDatabase, ref, child, push, update, get} from "https://www.gstatic.com/firebasejs/12.2.0/firebase-database.js";
+import { getDatabase, ref, onValue, child, push, update, get} from "https://www.gstatic.com/firebasejs/12.2.0/firebase-database.js";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -44,6 +44,7 @@ onValue(ref(database, "users/Test"), (snapshot) => {
 
 let username = "";
 let isSignup = false;
+let channelListener;
 
 const loginScreen = document.getElementById("loginScreen");
 const loginTitle = document.getElementById("loginTitle");
@@ -190,14 +191,24 @@ function renderChannels() {
         btn.textContent = "#" + channels[id].Name;
         if (id === currentChannel) btn.classList.add("active");
         btn.onclick = () => {
+            channelListener();
             currentChannel = id;
-            chatHeader.textContent = "#" + channels[id].name;
+            chatHeader.textContent = "#" + channels[id].Name;
             renderChannels();
             renderMessages();
         };
         li.appendChild(btn);
         channelListEl.appendChild(li);
     };
+
+    channelListener = onValue(ref(database, `Messages/${currentChannel}`), async (snapshot) => {
+        console.log("Test");
+        await get(child(dbRef, "Messages")).then((snapshot) => {
+            let messages = snapshot.val();
+            channels[currentChannel].Messages = Object.values(messages[currentChannel]);
+        })
+        renderMessages();
+    });
 }
 
 function renderMessages() {
