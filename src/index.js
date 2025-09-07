@@ -321,7 +321,7 @@ renameSave.onclick = async () => {
 
     // Update local state
     channels[currentChannel].Name = newName;
-    chatHeader.textContent = "#" + newName;
+    chatHeaderName.textContent = "#" + newName;
     renderChannels();
 
     // Close modal
