@@ -31,10 +31,24 @@ const toggleAuth = document.getElementById("toggleAuth");
 const sidebar = document.getElementById("sidebar");
 const chat = document.getElementById("chat");
 
+// Rename Channel Elements
 const renameModal = document.getElementById("renameModal");
 const renameInput = document.getElementById("renameInput");
 const renameCancel = document.getElementById("renameCancel");
 const renameSave = document.getElementById("renameSave");
+
+// Chat options elements
+const chatHeaderName = document.getElementById("chatHeaderName");
+const chatOptionsBtn = document.getElementById("chatOptionsBtn");
+const chatOptionsMenu = document.getElementById("chatOptionsMenu");
+const addMemberOption = document.getElementById("addMemberOption");
+
+// Add member elements
+const addMemberModal = document.getElementById("addMemberModal");
+const addMemberInput = document.getElementById("addMemberInput");
+const addMemberCancel = document.getElementById("addMemberCancel");
+const addMemberSave = document.getElementById("addMemberSave");
+
 
 toggleAuth.onclick = () => {
     isSignup = !isSignup;
@@ -180,14 +194,14 @@ function renderChannels() {
         btn.onclick = () => {
             channelListener();
             currentChannel = id;
-            chatHeader.textContent = "#" + channels[id].Name;
+            chatHeaderName.textContent = "#" + channels[id].Name;
             // If owner, make it look clickable
             if (channels[currentChannel].Owner === username) {
-                chatHeader.style.cursor = "pointer";
-                chatHeader.title = "Click to rename channel";
+                chatHeaderName.style.cursor = "pointer";
+                chatHeaderName.title = "Click to rename channel";
             } else {
-                chatHeader.style.cursor = "default";
-                chatHeader.removeAttribute("title");
+                chatHeaderName.style.cursor = "default";
+                chatHeaderName.removeAttribute("title");
             }
             renderChannels();
             renderMessages();
@@ -278,39 +292,92 @@ addChannelBtn.onclick = () => {
 };
 
 // Open modal when clicking chat header
-chatHeader.onclick = () => {
-  if (channels[currentChannel].Owner !== username) {
-    console.log("Owner: " + channels[currentChannel].Owner);
-    console.log("Username: " + username);
-    return; // Not the owner, do nothing
-  }
+chatHeaderName.onclick = () => {
+    if (channels[currentChannel].Owner !== username) {
+        console.log("Owner: " + channels[currentChannel].Owner);
+        console.log("Username: " + username);
+        return; // Not the owner, do nothing
+    }
 
-  renameInput.value = channels[currentChannel].Name;
-  renameModal.classList.remove("hidden");
-  renameInput.focus();
+    renameInput.value = channels[currentChannel].Name;
+    renameModal.classList.remove("hidden");
+    renameInput.focus();
 };
 
 // Cancel button
 renameCancel.onclick = () => {
-  renameModal.classList.add("hidden");
+    renameModal.classList.add("hidden");
 };
 
 // Save new channel name
 renameSave.onclick = async () => {
-  const newName = renameInput.value.trim();
-  if (!newName) return;
+    const newName = renameInput.value.trim();
+    if (!newName) return;
 
-  // Update Firebase
-  const updates = {};
-  updates[`Channels/${currentChannel}/Name`] = newName;
-  await update(dbRef, updates);
+    // Update Firebase
+    const updates = {};
+    updates[`Channels/${currentChannel}/Name`] = newName;
+    await update(dbRef, updates);
 
-  // Update local state
-  channels[currentChannel].Name = newName;
-  chatHeader.textContent = "#" + newName;
-  renderChannels();
+    // Update local state
+    channels[currentChannel].Name = newName;
+    chatHeader.textContent = "#" + newName;
+    renderChannels();
 
-  // Close modal
-  renameModal.classList.add("hidden");
+    // Close modal
+    renameModal.classList.add("hidden");
 };
 
+// Toggle dropdown menu
+chatOptionsBtn.onclick = () => {
+    chatOptionsMenu.classList.toggle("hidden");
+};
+
+// Close dropdown if clicking outside
+document.addEventListener("click", (e) => {
+    if (!chatOptionsBtn.contains(e.target) && !chatOptionsMenu.contains(e.target)) {
+        chatOptionsMenu.classList.add("hidden");
+    }
+});
+
+addMemberOption.onclick = () => {
+    chatOptionsMenu.classList.add("hidden"); // close menu
+    addMemberInput.value = "";
+    addMemberModal.classList.remove("hidden");
+    addMemberInput.focus();
+};
+
+addMemberCancel.onclick = () => {
+  addMemberModal.classList.add("hidden");
+};
+
+addMemberSave.onclick = async () => {
+    const newUser = addMemberInput.value.trim();
+    if (!newUser) return;
+
+    // Check if user exists
+    let users = {};
+    await get(child(dbRef, "Users")).then((snapshot) => {
+        if (snapshot.exists()) {
+            users = snapshot.val();
+        }
+    });
+
+    if (!(newUser in users)) {
+        alert("User not found!");
+        return;
+    }
+
+    // Update channel membership
+    const updates = {};
+    updates[`Channels/${currentChannel}/Members/${newUser}`] = true;
+    updates[`Users/${newUser}/Channels/${currentChannel}`] = true;
+
+    await update(dbRef, updates);
+
+    // Update local state
+    channels[currentChannel].Members[newUser] = true;
+
+    addMemberModal.classList.add("hidden");
+    alert(`${newUser} added to channel!`);
+};

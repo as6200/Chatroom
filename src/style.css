@@ -125,6 +125,10 @@ body {
     padding: 1rem;
     border-bottom: 1px solid #2a2a2a;
     font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
 }
 .messages {
     flex: 1;
@@ -247,6 +251,47 @@ body {
 
 .hidden {
   display: none;
+}
+
+/* Add user modal*/
+.chat-options-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #e5e5e5;
+    display: flex;
+    align-items: center;
+}
+
+.chat-options-btn:hover {
+    background: #242424;
+    border-radius: 6px;
+}
+
+.dropdown {
+    position: absolute;
+    top: 100%;
+    right: 1rem;
+    background: #181818;
+    border: 1px solid #2a2a2a;
+    border-radius: 0.5rem;
+    margin-top: 0.25rem;
+    z-index: 1000;
+}
+
+.dropdown ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.dropdown li {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+}
+
+.dropdown li:hover {
+    background: #242424;
 }
 
 .hidden { display: none; }
