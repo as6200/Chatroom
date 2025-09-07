@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Chatroom</title>
   <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <script type="module" src="index.js"></script>
   
 </head>
@@ -22,18 +23,35 @@
   <div class="sidebar hidden" id="sidebar">
     <div class="sidebar-header">
       <span>Channels</span>
-      <button id="addChannel">+</button>
+      <button id="addChannel" class="addChannel">
+        <span class="material-icons">add</span>
+      </button>
     </div>
     <div class="channels">
       <ul id="channelList"></ul>
     </div>
   </div>
   <div class="chat hidden" id="chat">
-    <div class="chat-header" id="chatHeader">#general</div>
+    <div class="chat-header" id="chatHeader">
+        #General
+        <!-- <i class="material-icons">settings</i> -->
+    </div>
     <div class="messages" id="messages"></div>
     <div class="composer">
       <textarea id="input" rows="2" placeholder="Type a message..."></textarea>
       <button id="send">Send</button>
+    </div>
+  </div>
+  
+  <!-- Rename Channel Modal -->
+  <div id="renameModal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Rename Channel</h2>
+      <input type="text" id="renameInput" placeholder="Enter new channel name" />
+      <div class="modal-actions">
+        <button id="renameCancel">Cancel</button>
+        <button id="renameSave">Save</button>
+      </div>
     </div>
   </div>
 

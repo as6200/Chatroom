@@ -1,11 +1,7 @@
-// Import the functions you need from the SDKs you need
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.0/firebase-app.js";
-import { getDatabase, ref, onValue, child, push, update, get} from "https://www.gstatic.com/firebasejs/12.2.0/firebase-database.js";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+import { getDatabase, ref, onValue, child, push, update, get, set} from "https://www.gstatic.com/firebasejs/12.2.0/firebase-database.js";
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyCTUg9DqZDx6em5Uw3RwFCURlpI_g1UmpE",
   authDomain: "test-3ffed.firebaseapp.com",
@@ -22,26 +18,6 @@ const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 const dbRef = ref(database);
 
-/*
-function writeData() {
-    set(ref(database, "users"), {
-        "Test": 2
-    });
-}
-
-function updateData() {
-    const dbRef = ref(database);
-    const updates = {};
-    updates['users/Test'] = increment(1);
-    update(dbRef, updates)
-}
-
-onValue(ref(database, "users/Test"), (snapshot) => {
-    const data = snapshot.val();
-    console.log("Test changed, new value: " + data);
-});*/
-
-
 let username = "";
 let isSignup = false;
 let channelListener;
@@ -54,6 +30,11 @@ const loginBtn = document.getElementById("loginBtn");
 const toggleAuth = document.getElementById("toggleAuth");
 const sidebar = document.getElementById("sidebar");
 const chat = document.getElementById("chat");
+
+const renameModal = document.getElementById("renameModal");
+const renameInput = document.getElementById("renameInput");
+const renameCancel = document.getElementById("renameCancel");
+const renameSave = document.getElementById("renameSave");
 
 toggleAuth.onclick = () => {
     isSignup = !isSignup;
@@ -122,16 +103,17 @@ const channels = {};
 const channels = {
     "0": {
         Name: "General",
+        Owner: "System",
         Members: {
             System: true
         },
         Messages: [
             { Sender: "System", Message: "Welcome!"},
-            { Sender: "Aayush", Message: "Hi!"}
         ]
     },
     "1": {
         Name: "Random",
+        Owner: "System",
         Members: {
             System: true
         },
@@ -148,11 +130,13 @@ async function getChannels() {
 
     // Get channels
     await get(child(dbRef, "Channels")).then((snapshot) => {
-        if (snapshot.exists()) {
-            channelNames = snapshot.val();
-        } else {
+        if (!snapshot.exists()) {
             console.log("No channel data found");
+            return;   
         }
+
+        channelNames = Object.fromEntries(Object.entries(snapshot.val()).filter(([channelId, channel]) => channel.Members?.[username]));
+
     }).catch((error) => {
         console.error(error);
     })
@@ -171,15 +155,16 @@ async function getChannels() {
     for (let channelID in channelNames) {
         let channelName = channelNames[channelID].Name;
         let channelMembers = channelNames[channelID].Members;
-        let channelMessages = Object.values(messages[channelID]);
+        let channelOwner = channelNames[channelID].Owner;
+        let channelMessages = Object.values(messages[channelID]).slice(1);
         let channel = {
             Name: channelName,
             Members: channelMembers,
+            Owner: channelOwner,
             Messages: channelMessages
         }
         channels[channelID] = channel;
     }
-
     currentChannel = Object.keys(channelNames)[0];
 }
 
@@ -189,11 +174,21 @@ function renderChannels() {
         const li = document.createElement("li");
         const btn = document.createElement("button");
         btn.textContent = "#" + channels[id].Name;
+        
+        
         if (id === currentChannel) btn.classList.add("active");
         btn.onclick = () => {
             channelListener();
             currentChannel = id;
             chatHeader.textContent = "#" + channels[id].Name;
+            // If owner, make it look clickable
+            if (channels[currentChannel].Owner === username) {
+                chatHeader.style.cursor = "pointer";
+                chatHeader.title = "Click to rename channel";
+            } else {
+                chatHeader.style.cursor = "default";
+                chatHeader.removeAttribute("title");
+            }
             renderChannels();
             renderMessages();
         };
@@ -202,10 +197,9 @@ function renderChannels() {
     };
 
     channelListener = onValue(ref(database, `Messages/${currentChannel}`), async (snapshot) => {
-        console.log("Test");
         await get(child(dbRef, "Messages")).then((snapshot) => {
             let messages = snapshot.val();
-            channels[currentChannel].Messages = Object.values(messages[currentChannel]);
+            channels[currentChannel].Messages = Object.values(messages[currentChannel]).slice(1);
         })
         renderMessages();
     });
@@ -251,6 +245,11 @@ function sendMessage() {
     inputEl.value = "";
 }
 
+onValue(ref(database, `Users/${username}/Channels`), (snapshot) => {
+    getChannels();
+    renderChannels();
+});
+
 sendBtn.onclick = sendMessage;
 inputEl.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -260,10 +259,58 @@ inputEl.addEventListener("keydown", (e) => {
 });
 
 addChannelBtn.onclick = () => {
-    let id = "newchannel" + Math.floor(Math.random() * 1000);
-    channels[id] = [];
-    currentChannel = id;
-    chatHeader.textContent = "#" + id;
+    let name = "newchannel" + Math.floor(Math.random() * 10000);
+    let newChannel = { Members: {}, Name: name, Owner: username }
+    newChannel.Members[username] = true;
+
+    const updates = {};
+    const channelKey = push(child(dbRef, "Channels")).key;
+    updates[`Channels/${channelKey}`] = newChannel;
+    updates[`Users/${username}/Channels/${channelKey}`] = true;
+    updates[`Messages/${channelKey}`] = {"0": {Message: "Init", Sender: "System"}};
+    update(dbRef, updates);
+
+    channels[channelKey] = newChannel;
+    currentChannel = channelKey;
+    chatHeader.textContent = "#" + name;
     renderChannels();
     renderMessages();
 };
+
+// Open modal when clicking chat header
+chatHeader.onclick = () => {
+  if (channels[currentChannel].Owner !== username) {
+    console.log("Owner: " + channels[currentChannel].Owner);
+    console.log("Username: " + username);
+    return; // Not the owner, do nothing
+  }
+
+  renameInput.value = channels[currentChannel].Name;
+  renameModal.classList.remove("hidden");
+  renameInput.focus();
+};
+
+// Cancel button
+renameCancel.onclick = () => {
+  renameModal.classList.add("hidden");
+};
+
+// Save new channel name
+renameSave.onclick = async () => {
+  const newName = renameInput.value.trim();
+  if (!newName) return;
+
+  // Update Firebase
+  const updates = {};
+  updates[`Channels/${currentChannel}/Name`] = newName;
+  await update(dbRef, updates);
+
+  // Update local state
+  channels[currentChannel].Name = newName;
+  chatHeader.textContent = "#" + newName;
+  renderChannels();
+
+  // Close modal
+  renameModal.classList.add("hidden");
+};
+

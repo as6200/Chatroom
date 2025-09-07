@@ -74,11 +74,30 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    font-weight: bold;
 }
 .channels {
     flex: 1;
     overflow-y: auto;
 }
+
+#addChannel {
+    background-color: #181818;
+    border: none;
+    border-radius: 8px;
+    padding: 0px;
+    cursor: pointer;
+    color: white;
+    font-size: 5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#addChannel:hover {
+    background-color: #242424;
+}
+
 .channels ul {
     list-style: none;
     padding: 0;
@@ -160,6 +179,74 @@ body {
 }
 .composer button:hover {
     background: #10b981;
+}
+
+/* Modal styling */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modal-content {
+  background: #181818;
+  padding: 2rem;
+  border-radius: 1rem;
+  width: 300px;
+  text-align: center;
+}
+
+.modal-content h2 {
+  margin-bottom: 1rem;
+}
+
+.modal-content input {
+  width: 100%;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: #2a2a2a;
+  color: #e5e5e5;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.modal-actions button {
+  flex: 1;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+#renameCancel {
+  background: #444;
+  color: #fff;
+}
+
+#renameSave {
+  background: #059669;
+  color: #fff;
+}
+
+#renameSave:hover {
+  background: #10b981;
+}
+
+.hidden {
+  display: none;
 }
 
 .hidden { display: none; }
