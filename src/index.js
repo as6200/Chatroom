@@ -49,6 +49,12 @@ const addMemberInput = document.getElementById("addMemberInput");
 const addMemberCancel = document.getElementById("addMemberCancel");
 const addMemberSave = document.getElementById("addMemberSave");
 
+// Delete Channel elements
+const deleteChannelOption = document.getElementById("deleteChannelOption");
+const deleteChannelModal = document.getElementById("deleteChannelModal");
+const deleteChannelCancel = document.getElementById("deleteChannelCancel");
+const deleteChannelConfirm = document.getElementById("deleteChannelConfirm");
+
 
 toggleAuth.onclick = () => {
     isSignup = !isSignup;
@@ -104,8 +110,9 @@ loginBtn.onclick = async () => {
 
     onValue(ref(database, `Users/${username}/Channels`), async (snapshot) => {
         if (username === "") return;
-        console.log("New channel detected");
+        console.log("channel change detected");
         await getChannels();
+        console.log(console);
         renderChannels();
         renderMessages();
     });
@@ -145,11 +152,16 @@ const channels = {
         ]
     }
 };*/
-let currentChannel = "0";
+let currentChannel = "1";
 
 async function getChannels() {
     let channelNames = {}
     let messages = {}
+
+    // Clear local state before refilling
+    for (let key in channels) {
+        delete channels[key];
+    }
 
     // Get channels
     await get(child(dbRef, "Channels")).then((snapshot) => {
@@ -199,19 +211,28 @@ function renderChannels() {
         btn.textContent = "#" + channels[id].Name;
         
         
-        if (id === currentChannel) btn.classList.add("active");
+        if (id === currentChannel) {
+            btn.classList.add("active");
+            chatHeaderName.textContent = "#" + channels[id].Name;
+            
+            if (channels[currentChannel].Owner === username) {
+                chatHeaderName.style.cursor = "pointer";
+                console.log("Owner");
+                deleteChannelOption.classList.remove("hidden");
+                chatHeaderName.title = "Click to rename channel";
+            } else {
+                console.log("Not Owner");
+                chatHeaderName.style.cursor = "default";
+                deleteChannelOption.classList.add("hidden");
+                chatHeaderName.removeAttribute("title");
+            }
+        }
+
         btn.onclick = () => {
             channelListener();
             currentChannel = id;
             chatHeaderName.textContent = "#" + channels[id].Name;
-            // If owner, make it look clickable
-            if (channels[currentChannel].Owner === username) {
-                chatHeaderName.style.cursor = "pointer";
-                chatHeaderName.title = "Click to rename channel";
-            } else {
-                chatHeaderName.style.cursor = "default";
-                chatHeaderName.removeAttribute("title");
-            }
+            
             renderChannels();
             renderMessages();
         };
@@ -230,6 +251,7 @@ function renderChannels() {
 
 function renderMessages() {
     messagesEl.innerHTML = "";
+    console.log(currentChannel);
     const msgs = channels[currentChannel].Messages || [];
     let prevAuthor = null;
     msgs.forEach((m) => {
@@ -276,7 +298,7 @@ inputEl.addEventListener("keydown", (e) => {
     }
 });
 
-addChannelBtn.onclick = () => {
+addChannelBtn.onclick = async () => {
     let name = "newchannel" + Math.floor(Math.random() * 10000);
     let newChannel = { Members: {}, Name: name, Owner: username }
     newChannel.Members[username] = true;
@@ -286,11 +308,12 @@ addChannelBtn.onclick = () => {
     updates[`Channels/${channelKey}`] = newChannel;
     updates[`Users/${username}/Channels/${channelKey}`] = true;
     updates[`Messages/${channelKey}`] = {"0": {Message: "Init", Sender: "System"}};
-    update(dbRef, updates);
+    await update(dbRef, updates);
 
     channels[channelKey] = newChannel;
     currentChannel = channelKey;
     chatHeaderName.textContent = "#" + name;
+    await getChannels();
     renderChannels();
     renderMessages();
 };
@@ -384,4 +407,39 @@ addMemberSave.onclick = async () => {
 
     addMemberModal.classList.add("hidden");
     alert(`${newUser} added to channel!`);
+};
+
+deleteChannelOption.onclick = () => {
+    chatOptionsMenu.classList.add("hidden");
+    deleteChannelModal.classList.remove("hidden");
+};
+
+deleteChannelCancel.onclick = () => {
+    deleteChannelModal.classList.add("hidden");
+};
+
+deleteChannelConfirm.onclick = async () => {
+    const channelId = currentChannel;
+
+    // Get members of this channel
+    const members = channels[channelId].Members || {};
+    const updates = {};
+
+    // Delete channel itself + messages
+    updates[`Channels/${channelId}`] = null;
+    updates[`Messages/${channelId}`] = null;
+
+    // Remove channel from each user
+    for (const member in members) {
+        updates[`Users/${member}/Channels/${channelId}`] = null;
+    }
+
+    await update(dbRef, updates);
+
+    // Remove from local state
+    delete channels[channelId];
+
+    currentChannel = "1";
+
+    deleteChannelModal.classList.add("hidden");
 };

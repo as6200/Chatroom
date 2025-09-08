@@ -303,6 +303,16 @@ body {
   color: #bbb;
 }
 
+#deleteChannelConfirm {
+  background: #dc2626; 
+  color: #fff;
+}
+
+#deleteChannelConfirm:hover {
+  background: #ef4444;
+}
 
 
-.hidden { display: none; }
+.hidden { 
+    display: none !important;
+}

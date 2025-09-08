@@ -45,6 +45,10 @@
                         <span class="material-icons">person_add</span>
                         Add Member
                     </li>
+                    <li id="deleteChannelOption" class="owner-only hidden">
+                        <span class="material-icons">delete</span>
+                        Delete Channel
+                    </li>
                 </ul>
             </div>
         </div>
@@ -75,6 +79,18 @@
             <div class="modal-actions">
                 <button id="addMemberCancel">Cancel</button>
                 <button id="addMemberSave">Add</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Channel Modal -->
+    <div id="deleteChannelModal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Delete Channel</h2>
+            <p>Are you sure you want to delete this channel? This action cannot be undone.</p>
+            <div class="modal-actions">
+                <button id="deleteChannelCancel">Cancel</button>
+                <button id="deleteChannelConfirm">Delete</button>
             </div>
         </div>
     </div>
