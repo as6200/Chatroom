@@ -101,6 +101,15 @@ loginBtn.onclick = async () => {
     loginScreen.classList.add("hidden");
     sidebar.classList.remove("hidden");
     chat.classList.remove("hidden");
+
+    onValue(ref(database, `Users/${username}/Channels`), async (snapshot) => {
+        if (username === "") return;
+        console.log("New channel detected");
+        await getChannels();
+        renderChannels();
+        renderMessages();
+    });
+
     await getChannels();
     renderChannels();
     renderMessages();
@@ -179,7 +188,7 @@ async function getChannels() {
         }
         channels[channelID] = channel;
     }
-    currentChannel = Object.keys(channelNames)[0];
+    //currentChannel = Object.keys(channelNames)[0];
 }
 
 function renderChannels() {
@@ -259,11 +268,6 @@ function sendMessage() {
     inputEl.value = "";
 }
 
-onValue(ref(database, `Users/${username}/Channels`), (snapshot) => {
-    getChannels();
-    renderChannels();
-});
-
 sendBtn.onclick = sendMessage;
 inputEl.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -286,7 +290,7 @@ addChannelBtn.onclick = () => {
 
     channels[channelKey] = newChannel;
     currentChannel = channelKey;
-    chatHeader.textContent = "#" + name;
+    chatHeaderName.textContent = "#" + name;
     renderChannels();
     renderMessages();
 };
