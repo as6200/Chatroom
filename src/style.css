@@ -253,7 +253,7 @@ body {
   display: none;
 }
 
-/* Add user modal*/
+/* Channel settings*/
 .chat-options-btn {
     background: none;
     border: none;
@@ -286,12 +286,22 @@ body {
 }
 
 .dropdown li {
-    padding: 0.75rem 1rem;
-    cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem; 
+  padding: 0.75rem 1rem;
+  cursor: pointer;
 }
 
 .dropdown li:hover {
     background: #242424;
 }
+
+.dropdown li .material-icons {
+  font-size: 18px;   
+  vertical-align: middle;
+}
+
+
 
 .hidden { display: none; }
