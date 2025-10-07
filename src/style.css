@@ -144,6 +144,12 @@ body {
     margin-bottom: 0.1rem;
     margin-top: 1.0rem;
 }
+.chat-image {
+  max-width: 300px;
+  max-height: 300px;
+  border-radius: 0.5rem;
+  display: block;
+}
 .bubble {
     display: inline-block;
     padding: 0.5rem 0.75rem;

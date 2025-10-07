@@ -1,5 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.0/firebase-app.js";
 import { getDatabase, ref, onValue, child, push, update, get, set} from "https://www.gstatic.com/firebasejs/12.2.0/firebase-database.js";
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.2.0/firebase-storage.js";
 
 // Firebase config
 const firebaseConfig = {
@@ -12,10 +13,12 @@ const firebaseConfig = {
   appId: "1:1017713734087:web:4f006f1dcc1976663269e2",
   measurementId: "G-S3QLWG6FD4"
 };
+// Bucket reference - gs://test-3ffed.firebasestorage.app
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
+const storage = getStorage(app);
 const dbRef = ref(database);
 
 let username = "";
@@ -266,7 +269,14 @@ function renderMessages() {
         
         const bubble = document.createElement("div");
         bubble.className = "bubble";
-        bubble.textContent = m.Message;
+        if (m.ImageURL) {
+            const img = document.createElement("img");
+            img.src = m.ImageURL;
+            img.className = "chat-image";
+            bubble.appendChild(img);
+        } else {
+            bubble.textContent = m.Message;
+        }
         div.appendChild(bubble);
         messagesEl.appendChild(div);
         prevAuthor = m.Sender;
@@ -289,6 +299,19 @@ function sendMessage() {
     renderMessages();
     inputEl.value = "";
 }
+
+async function uploadImageMessage(file) {
+    const imgRef = storageRef(storage, `images/${currentChannel}/${Date.now()}_${file.name}`);
+    await uploadBytes(imgRef, file);
+    const url = await getDownloadURL(imgRef);
+
+    const messageData = { Sender: username, ImageURL: url };
+    const messageKey = push(child(dbRef, `Messages/${currentChannel}`)).key;
+    const updates = {};
+    updates[`Messages/${currentChannel}/${messageKey}`] = messageData;
+    await update(dbRef, updates);
+}
+
 
 sendBtn.onclick = sendMessage;
 inputEl.addEventListener("keydown", (e) => {
@@ -359,6 +382,18 @@ renameSave.onclick = async () => {
 chatOptionsBtn.onclick = () => {
     chatOptionsMenu.classList.toggle("hidden");
 };
+
+// Catch copy/paste
+inputEl.addEventListener("paste", async (e) => {
+    const items = e.clipboardData.items;
+    for (const item of items) {
+        if (item.type.startsWith("image/")) {
+            const file = item.getAsFile();
+            await uploadImageMessage(file);
+        }
+    }
+});
+
 
 // Close dropdown if clicking outside
 document.addEventListener("click", (e) => {
